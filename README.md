@@ -29,6 +29,34 @@ Express (ES6), MySQL (Sequelize ORM), Cloudinary for images. Admin auth via JWT.
    ```
    API: `http://localhost:5000`
 
+## Deploying to Hostinger (fix 503)
+
+Node.js is supported on **Business** and **Cloud** plans. A 503 usually means the app isn’t starting (missing env or wrong root).
+
+1. **Deploy only the backend**
+   - If your repo has both `frontend` and `backend`, in Hostinger **Build settings** set **Application root** (or equivalent) to `backend` so the app runs from the backend folder. Otherwise Hostinger may build the frontend and never start this API.
+
+2. **Set environment variables** in the Node.js app settings (hPanel → your site → Environment / Config):
+   - `DB_HOST` – MySQL host (e.g. `localhost` or Hostinger’s DB host)
+   - `DB_PORT` – `3306`
+   - `DB_NAME` – your database name
+   - `DB_USER` – MySQL user
+   - `DB_PASSWORD` – MySQL password
+   - `JWT_SECRET` – strong random string
+   - `FRONTEND_URL` – your frontend URL (e.g. `https://yoursite.com`)
+   - `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`
+   - Do **not** set `PORT` unless Hostinger tells you to; the app uses `process.env.PORT` automatically.
+
+3. **Build / start**
+   - Build command: leave default or `npm install`.
+   - Start command: `npm start` (or `node server.js`).
+
+4. **Database**
+   - Create a MySQL database and user in hPanel, then run migrations once (e.g. via SSH if available: `cd backend && npm run db:sync && npm run db:seed`, or use a local DB and export/import).
+
+5. **Check logs**
+   - In hPanel, open your Node.js app → **Deployment details** or **Logs**. If the process exits, the log will show the error (often “Database connection failed” or missing env).
+
 ## Scripts
 
 - `npm start` – run server
