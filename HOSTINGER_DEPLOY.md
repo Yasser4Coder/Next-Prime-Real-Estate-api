@@ -87,13 +87,21 @@ Do **not** set `PORT`; the app uses Hostinger’s value.
 
 **PORT bug (common):** The app must use `process.env.PORT` with a **fallback** (e.g. `parseInt(process.env.PORT, 10) || 3000`). If you had `const PORT = process.env.PORT` with no fallback and Hostinger didn’t set PORT, the app could listen on `undefined` and the proxy would get 503. This is now fixed in `server.js`.
 
-**Isolate the crash:** Set **Entry file** to **`server.minimal.js`** and redeploy. That file only runs Express + `/ping` and `/health` (no DB, no multer, no routes).  
-- If **https://your-api/ping** returns `{"pong":true}` → Hostinger is fine; the crash is in the full app (then use **Entry file** = **`server.js`** again and check Logs for the error).  
-- If you still get 503 → Build/start config or Node environment is wrong (build command, start command, root directory).
+**Isolate the crash:** Set **Entry file** to **`server.minimal.js`** and redeploy.  
+- If **https://your-api/ping** returns `{"pong":true}` → Hostinger is fine; switch back to **Entry file** = **`server.js`** and check Logs.  
+- If you still get 503 and **`minimal-started.txt` is not in `public_html`** → Hostinger is likely **not running your entry file** (wrong path or start command).
 
-- Confirm **Root directory** is **`/`** or **empty** (backend-only repo).
-- Confirm **Entry file** is exactly **`server.js`** (or `server.minimal.js` only for testing).
-- In MySQL (hPanel), create the DB and user, then run migrations once (e.g. via SSH from `public_html`: `node src/scripts/syncDb.js` and `node src/scripts/seed.js` if Node is in PATH, or use Hostinger support).
+**Find where Node runs (SSH):** The minimal server writes `minimal-started.txt` and `deploy-info.txt` in both the script dir and process cwd. Search your whole home:
+
+```bash
+find /home/$USER -name "minimal-started.txt" 2>/dev/null
+find /home/$USER -name "deploy-info.txt" 2>/dev/null
+```
+
+- **No files anywhere** → Node is not starting; check hPanel → Node.js apps → your app → **Logs** (Entry file, Root directory, Build/Start command).
+- **Files in another path** → That is the app run directory; ensure your domain is pointed at this Node app in hPanel.
+
+**Checklist:** Root directory **`/`** or empty; Entry file **`server.js`** (or **`server.minimal.js`** for test); Build = **`npm install`**; Start = **`npm start`** or **`node server.js`**; app **Deployed** and **Started** in the dashboard. MySQL: create DB/user in hPanel, then run migrations once (e.g. SSH: `node src/scripts/syncDb.js`).
 
 ---
 
