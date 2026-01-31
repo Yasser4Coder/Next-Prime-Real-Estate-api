@@ -25,9 +25,15 @@ app.use('/api', routes)
 
 app.get('/health', (req, res) => {
   const dbConnected = app.get('dbConnected')
+  const dbConnecting = app.get('dbConnecting')
+  const dbError = app.get('dbError')
   const out = { ok: true, db: dbConnected === true }
   if (dbConnected !== true) {
-    out.error = app.get('dbError') || 'Database not connected'
+    if (dbConnecting) {
+      out.error = 'Connecting... (try again in a few seconds)'
+    } else {
+      out.error = dbError || 'Connection failed (check server logs)'
+    }
   }
   res.json(out)
 })
