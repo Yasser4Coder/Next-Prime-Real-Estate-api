@@ -31,9 +31,21 @@ try {
 
   const server = app.listen(PORT, '0.0.0.0', () => {
     log('Server running on port ' + PORT)
+    app.set('dbConnecting', true)
     sequelize.authenticate()
-      .then(() => log('Database connected.'))
-      .catch(err => logError('Database connection failed: ' + err.message))
+      .then(() => {
+        app.set('dbConnected', true)
+        app.set('dbConnecting', false)
+        app.set('dbError', null)
+        log('Database connected.')
+      })
+      .catch(err => {
+        const msg = err && err.message ? err.message : String(err)
+        app.set('dbConnected', false)
+        app.set('dbConnecting', false)
+        app.set('dbError', msg)
+        logError('Database connection failed: ' + msg)
+      })
   })
 
   server.on('error', (err) => {

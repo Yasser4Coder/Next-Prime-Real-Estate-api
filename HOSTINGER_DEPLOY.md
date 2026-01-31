@@ -43,13 +43,15 @@ Before going live, confirm:
 | **Framework preset** | Express |
 | **Branch** | main |
 | **Node version** | 18.x, 20.x, or 22.x |
-| **Root directory** | **`/`** or **leave empty** (repo root = backend) |
-| **Entry file** | **`server.js`** |
+| **Root directory** | **`public_html`** (no trailing slash; see note below) |
+| **Entry file** | **`server.js`** (no leading slash) |
 | **Package manager** | npm |
-| **Build command** | `npm run build` or `npm install` (must run so `node_modules` exists) |
+| **Build command** | `npm install` or `npm run build` |
 | **Start command** | `npm start` or `node server.js` |
 
-With a backend-only repo, Root directory must be **`/`** or blank so Hostinger uses the repo root where `package.json` and `server.js` are. The **build step must run** (e.g. `npm install` or `npm run build`) before start, or you get "Cannot find module 'express'" and the app crashes.
+**Critical – avoid double slash:** If you see `Cannot find module '.../public_html//server.js'` in stderr.log, the path has a double slash. In hPanel set **Root directory** to **`public_html`** (no trailing `/`) and **Entry file** to **`server.js`** (no leading `/`).
+
+**Where your files are:** If you deploy via Git, Hostinger may put the repo in `public_html`. From SSH run `ls -la ~/domains/server.nextprimerealestate.com/public_html` and confirm `server.js` and `package.json` are there. If they are in a subfolder (e.g. `public_html/backend`), set Root to **`public_html/backend`** and Entry to **`server.js`**.
 
 ---
 
@@ -117,3 +119,24 @@ Check **Hostinger → Node.js apps → your app → Logs** (runtime/application 
 | **Module not found** (any path) | Either add the dependency to `package.json` and redeploy, or fix the require path so the file exists in the repo. |
 
 Ensure **Build command** runs before **Start**: e.g. Build = `npm install` or `npm run build`, Start = `npm start`. Without a successful build, `node_modules` is missing and the app crashes on the first `require()`.
+
+---
+
+## 7. stderr.log: "chdir ENOENT" and "Cannot find module ... public_html//server.js"
+
+If **stderr.log** shows:
+
+- **`Error setting directory to: ... public_html/: ENOENT: no such file or directory, chdir ... -> '.../public_html/'`**
+- **`Cannot find module '.../public_html//server.js'`**
+
+do this:
+
+1. **Remove the double slash:** In hPanel → Node.js app → Build configuration set **Root directory** to **`public_html`** (no trailing slash) and **Entry file** to **`server.js`** (no leading slash). Save and redeploy.
+
+2. **Confirm the path exists:** From SSH run:
+   ```bash
+   ls -la /home/u977993209/domains/server.nextprimerealestate.com/public_html/
+   ```
+   You must see `server.js` and `package.json` there. If your backend is in a subfolder (e.g. you have `public_html/backend/server.js`), set Root to **`public_html/backend`** and Entry to **`server.js`**.
+
+3. **If chdir ENOENT persists:** The Node runner may expect a different path format. In hPanel try Root directory as **`domains/server.nextprimerealestate.com/public_html`** (relative to your home) if there is no “full path” option. If your panel has an “Application root” or “Document root” that expects a full path, use exactly: **`/home/u977993209/domains/server.nextprimerealestate.com/public_html`** (no trailing slash).
