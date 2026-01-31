@@ -7,7 +7,7 @@ Use these **exact** settings in hPanel so Hostinger finds your app and runs it.
 ## 1. Repository
 
 - Deploy from **GitHub** (this repo).
-- Repo contains both `frontend/` and `backend/`. The Node app must run from the **backend** folder.
+- Repo is **backend only** – `package.json` and `server.js` are at the **repo root**.
 
 ---
 
@@ -18,11 +18,11 @@ Use these **exact** settings in hPanel so Hostinger finds your app and runs it.
 | **Framework preset** | Express |
 | **Branch** | main |
 | **Node version** | 18.x, 20.x, or 22.x |
-| **Root directory** | **`backend`** ← required (folder that has `package.json` and `server.js`) |
+| **Root directory** | **`/`** or **leave empty** (repo root = backend) |
 | **Entry file** | **`server.js`** |
 | **Package manager** | npm |
 
-If **Root directory** is wrong or empty, Hostinger looks at the repo root and reports "package.json file not found". It must be **`backend`** for this repo.
+With a backend-only repo, Root directory must be **`/`** or blank so Hostinger uses the repo root where `package.json` and `server.js` are.
 
 ---
 
@@ -58,6 +58,6 @@ Do **not** set `PORT`; the app uses Hostinger’s value.
 
 ## 5. If you still get 503
 
-- Confirm **Root directory** is exactly **`backend`** (no slash, no typo).
+- Confirm **Root directory** is **`/`** or **empty** (backend-only repo).
 - Confirm **Entry file** is exactly **`server.js`**.
 - In MySQL (hPanel), create the DB and user, then run migrations once (e.g. via SSH from `public_html`: `node src/scripts/syncDb.js` and `node src/scripts/seed.js` if Node is in PATH, or use Hostinger support).
