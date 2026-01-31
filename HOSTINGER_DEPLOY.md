@@ -85,8 +85,14 @@ Do **not** set `PORT`; the app uses Hostinger’s value.
 
 ## 5. If you still get 503
 
+**PORT bug (common):** The app must use `process.env.PORT` with a **fallback** (e.g. `parseInt(process.env.PORT, 10) || 3000`). If you had `const PORT = process.env.PORT` with no fallback and Hostinger didn’t set PORT, the app could listen on `undefined` and the proxy would get 503. This is now fixed in `server.js`.
+
+**Isolate the crash:** Set **Entry file** to **`server.minimal.js`** and redeploy. That file only runs Express + `/ping` and `/health` (no DB, no multer, no routes).  
+- If **https://your-api/ping** returns `{"pong":true}` → Hostinger is fine; the crash is in the full app (then use **Entry file** = **`server.js`** again and check Logs for the error).  
+- If you still get 503 → Build/start config or Node environment is wrong (build command, start command, root directory).
+
 - Confirm **Root directory** is **`/`** or **empty** (backend-only repo).
-- Confirm **Entry file** is exactly **`server.js`**.
+- Confirm **Entry file** is exactly **`server.js`** (or `server.minimal.js` only for testing).
 - In MySQL (hPanel), create the DB and user, then run migrations once (e.g. via SSH from `public_html`: `node src/scripts/syncDb.js` and `node src/scripts/seed.js` if Node is in PATH, or use Hostinger support).
 
 ---

@@ -16,8 +16,11 @@ try {
   const app = require('./src/app')
   const sequelize = require('./src/config/database')
 
-  // ✅ Hostinger: MUST use process.env.PORT ONLY
-  const PORT = process.env.PORT
+  // Hostinger sets process.env.PORT – fallback if missing (e.g. local dev)
+  const PORT = parseInt(process.env.PORT, 10) || 3000
+  if (!PORT || PORT < 1 || PORT > 65535) {
+    throw new Error('Invalid PORT: ' + process.env.PORT)
+  }
 
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on port ${PORT}`)
