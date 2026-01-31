@@ -17,11 +17,12 @@ try {
   const app = require('./src/app')
   const sequelize = require('./src/config/database')
 
-  const PORT = parseInt(process.env.PORT, 10) || 5000
+  // Hostinger forces a specific port – must use process.env.PORT
+  const PORT = process.env.PORT || 3000
 
   // Listen first so the process stays up even if DB fails (Hostinger 503 fix)
   app.listen(PORT, '0.0.0.0', () => {
-    console.log('Server listening on port ' + PORT)
+    console.log(`Server running on port ${PORT}`)
     app.set('dbConnecting', true)
     sequelize.authenticate()
       .then(() => {
