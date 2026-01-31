@@ -1,5 +1,5 @@
-import { DataTypes } from 'sequelize'
-import sequelize from '../config/database.js'
+const { DataTypes } = require('sequelize')
+const sequelize = require('../config/database')
 
 const Testimonial = sequelize.define(
   'Testimonial',
@@ -39,4 +39,4 @@ const Testimonial = sequelize.define(
   }
 )
 
-export default Testimonial
+module.exports = Testimonial

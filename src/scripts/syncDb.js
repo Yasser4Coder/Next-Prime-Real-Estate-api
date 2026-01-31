@@ -1,5 +1,5 @@
-import sequelize from '../config/database.js'
-import '../models/index.js'
+const sequelize = require('../config/database')
+require('../models')
 
 async function sync() {
   try {

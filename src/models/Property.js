@@ -1,5 +1,5 @@
-import { DataTypes } from 'sequelize'
-import sequelize from '../config/database.js'
+const { DataTypes } = require('sequelize')
+const sequelize = require('../config/database')
 
 const Property = sequelize.define(
   'Property',
@@ -91,4 +91,4 @@ const Property = sequelize.define(
   }
 )
 
-export default Property
+module.exports = Property

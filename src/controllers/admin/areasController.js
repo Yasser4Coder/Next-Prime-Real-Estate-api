@@ -1,5 +1,4 @@
-import { models } from '../../models/index.js'
-
+const { models } = require('../../models')
 const { Area } = models
 
 function slugify(name) {
@@ -10,7 +9,7 @@ function slugify(name) {
     .replace(/[^a-z0-9-]/g, '')
 }
 
-export async function list(req, res) {
+async function list(req, res) {
   try {
     const list = await Area.findAll({ order: [['id', 'ASC']] })
     const formatted = list.map((a) => ({
@@ -26,7 +25,7 @@ export async function list(req, res) {
   }
 }
 
-export async function create(req, res) {
+async function create(req, res) {
   try {
     const body = req.body
     const name = (body.name && body.name.trim()) || ''
@@ -50,7 +49,7 @@ export async function create(req, res) {
   }
 }
 
-export async function update(req, res) {
+async function update(req, res) {
   try {
     const id = req.params.id
     const area = await Area.findByPk(id)
@@ -74,7 +73,7 @@ export async function update(req, res) {
   }
 }
 
-export async function remove(req, res) {
+async function remove(req, res) {
   try {
     const id = req.params.id
     const area = await Area.findByPk(id)
@@ -86,3 +85,5 @@ export async function remove(req, res) {
     return res.status(500).json({ error: 'Failed to delete area' })
   }
 }
+
+module.exports = { list, create, update, remove }

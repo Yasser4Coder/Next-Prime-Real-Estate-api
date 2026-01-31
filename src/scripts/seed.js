@@ -1,8 +1,6 @@
-import bcrypt from 'bcryptjs'
-import sequelize from '../config/database.js'
-import '../models/index.js'
-import { models } from '../models/index.js'
-
+const bcrypt = require('bcryptjs')
+const sequelize = require('../config/database')
+const { models } = require('../models')
 const { Admin, Contact, Area, LocationList, SocialLink } = models
 
 const defaultAreas = [

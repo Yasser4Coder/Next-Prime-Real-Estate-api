@@ -1,6 +1,5 @@
-import { models } from '../../models/index.js'
-import { uploadToCloudinary, deleteFromCloudinaryByUrl } from '../../config/cloudinary.js'
-
+const { models } = require('../../models')
+const { uploadToCloudinary, deleteFromCloudinaryByUrl } = require('../../config/cloudinary')
 const { Property } = models
 
 function parsePrice(v) {
@@ -35,7 +34,6 @@ function parsePhotos(photos) {
   return []
 }
 
-/** Get existing photos as array of URL strings (handles JSON column returned as string) */
 function getExistingPhotoUrls(photos) {
   if (Array.isArray(photos)) return photos.filter((u) => typeof u === 'string')
   if (typeof photos === 'string' && photos.trim()) {
@@ -53,8 +51,7 @@ function parseJsonField(val, fallback = null) {
   if (val === undefined || val === null || val === '') return fallback
   if (typeof val === 'object') return val
   try {
-    const parsed = JSON.parse(val)
-    return parsed
+    return JSON.parse(val)
   } catch {
     return fallback
   }
@@ -100,7 +97,7 @@ function parseAgent(body) {
   return null
 }
 
-export async function list(req, res) {
+async function list(req, res) {
   try {
     const list = await Property.findAll({ order: [['id', 'ASC']] })
     return res.json(list)
@@ -110,7 +107,7 @@ export async function list(req, res) {
   }
 }
 
-export async function getOne(req, res) {
+async function getOne(req, res) {
   try {
     const id = parseInt(req.params.id, 10)
     const property = await Property.findByPk(id)
@@ -132,7 +129,7 @@ async function uploadFilesToCloudinary(files, folder = 'nextprime/properties') {
   return results
 }
 
-export async function create(req, res) {
+async function create(req, res) {
   try {
     const body = req.body
     let imageUrl = (body.image && body.image.trim()) || ''
@@ -188,7 +185,7 @@ export async function create(req, res) {
   }
 }
 
-export async function update(req, res) {
+async function update(req, res) {
   try {
     const id = parseInt(req.params.id, 10)
     const property = await Property.findByPk(id)
@@ -253,7 +250,7 @@ export async function update(req, res) {
   }
 }
 
-export async function remove(req, res) {
+async function remove(req, res) {
   try {
     const id = parseInt(req.params.id, 10)
     const property = await Property.findByPk(id)
@@ -271,3 +268,5 @@ export async function remove(req, res) {
     return res.status(500).json({ error: 'Failed to delete property' })
   }
 }
+
+module.exports = { list, getOne, create, update, remove }

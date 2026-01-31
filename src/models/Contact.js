@@ -1,5 +1,5 @@
-import { DataTypes } from 'sequelize'
-import sequelize from '../config/database.js'
+const { DataTypes } = require('sequelize')
+const sequelize = require('../config/database')
 
 const Contact = sequelize.define(
   'Contact',
@@ -32,4 +32,4 @@ const Contact = sequelize.define(
   }
 )
 
-export default Contact
+module.exports = Contact

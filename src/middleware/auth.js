@@ -1,9 +1,8 @@
-import jwt from 'jsonwebtoken'
-import { models } from '../models/index.js'
-
+const jwt = require('jsonwebtoken')
+const { models } = require('../models')
 const { Admin } = models
 
-export function authAdmin(req, res, next) {
+function authAdmin(req, res, next) {
   const authHeader = req.headers.authorization
   const token = authHeader && authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null
 
@@ -24,3 +23,5 @@ export function authAdmin(req, res, next) {
     return res.status(401).json({ error: 'Invalid or expired token' })
   }
 }
+
+module.exports = { authAdmin }

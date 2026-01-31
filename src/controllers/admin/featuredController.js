@@ -1,8 +1,7 @@
-import { models } from '../../models/index.js'
+const { models } = require('../../models')
+const { FeaturedProperty } = models
 
-const { FeaturedProperty, Property } = models
-
-export async function list(req, res) {
+async function list(req, res) {
   try {
     const list = await FeaturedProperty.findAll({
       order: [['sortOrder', 'ASC'], ['id', 'ASC']],
@@ -15,7 +14,7 @@ export async function list(req, res) {
   }
 }
 
-export async function set(req, res) {
+async function set(req, res) {
   try {
     const ids = Array.isArray(req.body.ids) ? req.body.ids.map((id) => parseInt(id, 10)).filter((n) => !isNaN(n)) : []
     await FeaturedProperty.destroy({ where: {} })
@@ -32,3 +31,5 @@ export async function set(req, res) {
     return res.status(500).json({ error: 'Failed to set featured' })
   }
 }
+
+module.exports = { list, set }

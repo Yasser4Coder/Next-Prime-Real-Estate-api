@@ -1,8 +1,7 @@
-import { models } from '../../models/index.js'
-
+const { models } = require('../../models')
 const { Property, FeaturedProperty } = models
 
-export async function list(req, res) {
+async function list(req, res) {
   try {
     const list = await Property.findAll({ order: [['id', 'ASC']] })
     return res.json(list)
@@ -12,7 +11,7 @@ export async function list(req, res) {
   }
 }
 
-export async function getOne(req, res) {
+async function getOne(req, res) {
   try {
     const id = parseInt(req.params.id, 10)
     const property = await Property.findByPk(id)
@@ -24,8 +23,7 @@ export async function getOne(req, res) {
   }
 }
 
-/** GET /api/featured-properties – featured property objects in dashboard order */
-export async function featuredList(req, res) {
+async function featuredList(req, res) {
   try {
     const rows = await FeaturedProperty.findAll({
       order: [['sortOrder', 'ASC'], ['id', 'ASC']],
@@ -38,3 +36,5 @@ export async function featuredList(req, res) {
     return res.status(500).json({ error: 'Failed to get featured properties' })
   }
 }
+
+module.exports = { list, getOne, featuredList }

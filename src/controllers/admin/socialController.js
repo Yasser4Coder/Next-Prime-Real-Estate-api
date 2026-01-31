@@ -1,8 +1,7 @@
-import { models } from '../../models/index.js'
-
+const { models } = require('../../models')
 const { SocialLink } = models
 
-export async function list(req, res) {
+async function list(req, res) {
   try {
     const list = await SocialLink.findAll({ order: [['sortOrder', 'ASC'], ['id', 'ASC']] })
     return res.json(list.map((s) => ({ name: s.name, href: s.href, icon: s.icon })))
@@ -12,7 +11,7 @@ export async function list(req, res) {
   }
 }
 
-export async function update(req, res) {
+async function update(req, res) {
   try {
     const body = req.body
     const name = (body.name && body.name.trim()) || 'Facebook'
@@ -33,7 +32,7 @@ export async function update(req, res) {
   }
 }
 
-export async function remove(req, res) {
+async function remove(req, res) {
   try {
     const name = decodeURIComponent(req.params.name)
     const row = await SocialLink.findOne({ where: { name } })
@@ -45,3 +44,5 @@ export async function remove(req, res) {
     return res.status(500).json({ error: 'Failed to remove social link' })
   }
 }
+
+module.exports = { list, update, remove }

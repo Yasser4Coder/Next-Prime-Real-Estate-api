@@ -1,12 +1,11 @@
-import bcrypt from 'bcryptjs'
-import jwt from 'jsonwebtoken'
-import { models } from '../models/index.js'
-
+const bcrypt = require('bcryptjs')
+const jwt = require('jsonwebtoken')
+const { models } = require('../models')
 const { Admin } = models
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret'
 const JWT_EXPIRES = '7d'
 
-export async function login(req, res) {
+async function login(req, res) {
   try {
     const { email, password } = req.body
     if (!email || !password) {
@@ -32,3 +31,5 @@ export async function login(req, res) {
     return res.status(500).json({ error: 'Server error' })
   }
 }
+
+module.exports = { login }

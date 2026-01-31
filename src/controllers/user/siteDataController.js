@@ -1,12 +1,7 @@
-import { models } from '../../models/index.js'
-
+const { models } = require('../../models')
 const { Property, Testimonial, Area, LocationList, Contact, SocialLink, FeaturedProperty } = models
 
-/**
- * GET /api/site-data
- * Returns all public data in one payload (matches frontend DashboardStore shape for main site).
- */
-export async function getSiteData(req, res) {
+async function getSiteData(req, res) {
   try {
     const [properties, testimonials, areasRows, locationsRows, contactRow, socialRows, featuredRows] = await Promise.all([
       Property.findAll({ order: [['id', 'ASC']] }),
@@ -55,3 +50,5 @@ export async function getSiteData(req, res) {
     return res.status(500).json({ error: 'Failed to get site data' })
   }
 }
+
+module.exports = { getSiteData }

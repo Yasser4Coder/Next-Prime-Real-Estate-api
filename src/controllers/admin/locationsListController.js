@@ -1,8 +1,7 @@
-import { models } from '../../models/index.js'
-
+const { models } = require('../../models')
 const { LocationList } = models
 
-export async function list(req, res) {
+async function list(req, res) {
   try {
     const list = await LocationList.findAll({ order: [['sortOrder', 'ASC'], ['id', 'ASC']] })
     return res.json(list.map((l) => l.name))
@@ -12,7 +11,7 @@ export async function list(req, res) {
   }
 }
 
-export async function add(req, res) {
+async function add(req, res) {
   try {
     const name = (req.body.name && req.body.name.trim()) || ''
     if (!name) return res.status(400).json({ error: 'Name is required' })
@@ -27,7 +26,7 @@ export async function add(req, res) {
   }
 }
 
-export async function remove(req, res) {
+async function remove(req, res) {
   try {
     const name = decodeURIComponent(req.params.name)
     const row = await LocationList.findOne({ where: { name } })
@@ -39,3 +38,5 @@ export async function remove(req, res) {
     return res.status(500).json({ error: 'Failed to remove location' })
   }
 }
+
+module.exports = { list, add, remove }

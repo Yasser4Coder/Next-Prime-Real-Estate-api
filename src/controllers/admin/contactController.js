@@ -1,8 +1,7 @@
-import { models } from '../../models/index.js'
-
+const { models } = require('../../models')
 const { Contact } = models
 
-export async function get(req, res) {
+async function get(req, res) {
   try {
     let contact = await Contact.findOne()
     if (!contact) {
@@ -20,7 +19,7 @@ export async function get(req, res) {
   }
 }
 
-export async function update(req, res) {
+async function update(req, res) {
   try {
     let contact = await Contact.findOne()
     if (!contact) {
@@ -44,3 +43,5 @@ export async function update(req, res) {
     return res.status(500).json({ error: 'Failed to update contact' })
   }
 }
+
+module.exports = { get, update }

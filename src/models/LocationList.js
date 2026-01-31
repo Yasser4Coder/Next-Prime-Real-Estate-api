@@ -1,5 +1,5 @@
-import { DataTypes } from 'sequelize'
-import sequelize from '../config/database.js'
+const { DataTypes } = require('sequelize')
+const sequelize = require('../config/database')
 
 const LocationList = sequelize.define(
   'LocationList',
@@ -26,4 +26,4 @@ const LocationList = sequelize.define(
   }
 )
 
-export default LocationList
+module.exports = LocationList

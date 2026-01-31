@@ -1,5 +1,4 @@
-import { models } from '../../models/index.js'
-
+const { models } = require('../../models')
 const { Testimonial } = models
 
 function getInitials(name) {
@@ -12,7 +11,7 @@ function getInitials(name) {
     .slice(0, 2)
 }
 
-export async function list(req, res) {
+async function list(req, res) {
   try {
     const list = await Testimonial.findAll({ order: [['id', 'ASC']] })
     return res.json(list)
@@ -22,7 +21,7 @@ export async function list(req, res) {
   }
 }
 
-export async function getOne(req, res) {
+async function getOne(req, res) {
   try {
     const id = parseInt(req.params.id, 10)
     const testimonial = await Testimonial.findByPk(id)
@@ -34,7 +33,7 @@ export async function getOne(req, res) {
   }
 }
 
-export async function create(req, res) {
+async function create(req, res) {
   try {
     const body = req.body
     const name = (body.name && body.name.trim()) || ''
@@ -54,7 +53,7 @@ export async function create(req, res) {
   }
 }
 
-export async function update(req, res) {
+async function update(req, res) {
   try {
     const id = parseInt(req.params.id, 10)
     const testimonial = await Testimonial.findByPk(id)
@@ -76,7 +75,7 @@ export async function update(req, res) {
   }
 }
 
-export async function remove(req, res) {
+async function remove(req, res) {
   try {
     const id = parseInt(req.params.id, 10)
     const testimonial = await Testimonial.findByPk(id)
@@ -88,3 +87,5 @@ export async function remove(req, res) {
     return res.status(500).json({ error: 'Failed to delete testimonial' })
   }
 }
+
+module.exports = { list, getOne, create, update, remove }

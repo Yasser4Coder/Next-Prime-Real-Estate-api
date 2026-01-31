@@ -1,12 +1,12 @@
-import sequelize from '../config/database.js'
-import Admin from './Admin.js'
-import Property from './Property.js'
-import Testimonial from './Testimonial.js'
-import Area from './Area.js'
-import LocationList from './LocationList.js'
-import Contact from './Contact.js'
-import SocialLink from './SocialLink.js'
-import FeaturedProperty from './FeaturedProperty.js'
+const sequelize = require('../config/database')
+const Admin = require('./Admin')
+const Property = require('./Property')
+const Testimonial = require('./Testimonial')
+const Area = require('./Area')
+const LocationList = require('./LocationList')
+const Contact = require('./Contact')
+const SocialLink = require('./SocialLink')
+const FeaturedProperty = require('./FeaturedProperty')
 
 // Associations
 FeaturedProperty.belongsTo(Property, { foreignKey: 'propertyId' })
@@ -23,5 +23,5 @@ const models = {
   FeaturedProperty,
 }
 
-export { sequelize, models }
-export default models
+module.exports = { sequelize, models }
+module.exports.default = models

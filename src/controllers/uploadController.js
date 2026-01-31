@@ -1,11 +1,6 @@
-import { uploadToCloudinary } from '../config/cloudinary.js'
+const { uploadToCloudinary } = require('../config/cloudinary')
 
-/**
- * POST /api/upload/image
- * Body: multipart file (field name: image)
- * Returns: { url, publicId }
- */
-export async function uploadImage(req, res) {
+async function uploadImage(req, res) {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' })
@@ -22,3 +17,5 @@ export async function uploadImage(req, res) {
     return res.status(500).json({ error: 'Upload failed' })
   }
 }
+
+module.exports = { uploadImage }

@@ -1,5 +1,5 @@
-import { DataTypes } from 'sequelize'
-import sequelize from '../config/database.js'
+const { DataTypes } = require('sequelize')
+const sequelize = require('../config/database')
 
 const Area = sequelize.define(
   'Area',
@@ -32,4 +32,4 @@ const Area = sequelize.define(
   }
 )
 
-export default Area
+module.exports = Area

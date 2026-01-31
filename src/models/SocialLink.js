@@ -1,5 +1,5 @@
-import { DataTypes } from 'sequelize'
-import sequelize from '../config/database.js'
+const { DataTypes } = require('sequelize')
+const sequelize = require('../config/database')
 
 const SocialLink = sequelize.define(
   'SocialLink',
@@ -32,4 +32,4 @@ const SocialLink = sequelize.define(
   }
 )
 
-export default SocialLink
+module.exports = SocialLink

@@ -1,4 +1,4 @@
-import multer from 'multer'
+const multer = require('multer')
 
 const storage = multer.memoryStorage()
 const upload = multer({
@@ -14,11 +14,11 @@ const upload = multer({
   },
 })
 
-export const uploadSingle = (fieldName) => upload.single(fieldName)
-export const uploadMultiple = (fieldName, maxCount = 10) => upload.array(fieldName, maxCount)
-
-/** Main image (1) + gallery images (up to 10). Use in property create/update. */
-export const uploadPropertyImages = upload.fields([
+const uploadSingle = (fieldName) => upload.single(fieldName)
+const uploadMultiple = (fieldName, maxCount = 10) => upload.array(fieldName, maxCount)
+const uploadPropertyImages = upload.fields([
   { name: 'image', maxCount: 1 },
   { name: 'photos', maxCount: 10 },
 ])
+
+module.exports = { uploadSingle, uploadMultiple, uploadPropertyImages }
