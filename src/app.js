@@ -6,11 +6,17 @@ const routes = require('./routes')
 dotenv.config()
 
 const app = express()
-const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173'
+const allowedOrigins = [
+  'http://localhost:5173',
+  'https://nextprimerealestate.com',
+]
 
 app.use(
   cors({
-    origin: frontendUrl,
+    origin: (origin, cb) => {
+      if (!origin || allowedOrigins.includes(origin)) cb(null, true)
+      else cb(null, false)
+    },
     credentials: true,
   })
 )

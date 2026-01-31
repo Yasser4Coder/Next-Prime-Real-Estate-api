@@ -19,7 +19,8 @@ async function getSiteData(req, res) {
       subtitle: a.subtitle,
       center: [Number(a.centerLat), Number(a.centerLng)],
     }))
-    const locationsList = locationsRows.map((l) => l.name)
+    const locationsBuy = locationsRows.filter((l) => (l.purpose || 'buy') === 'buy').map((l) => l.name)
+    const locationsRent = locationsRows.filter((l) => l.purpose === 'rent').map((l) => l.name)
     const contact = contactRow
       ? {
           phoneDisplay: contactRow.phoneDisplay,
@@ -40,14 +41,19 @@ async function getSiteData(req, res) {
       properties,
       testimonials,
       areas,
-      locationsList,
+      locationsBuy,
+      locationsRent,
       contact,
       socialLinks,
       featuredPropertyIds,
     })
   } catch (err) {
-    console.error(err)
-    return res.status(500).json({ error: 'Failed to get site data' })
+    console.error('getSiteData error:', err.message || err)
+    const message = err.message || String(err)
+    return res.status(500).json({
+      error: 'Failed to get site data',
+      detail: message,
+    })
   }
 }
 

@@ -12,7 +12,11 @@ const LocationList = sequelize.define(
     name: {
       type: DataTypes.STRING(255),
       allowNull: false,
-      unique: true,
+    },
+    purpose: {
+      type: DataTypes.ENUM('buy', 'rent'),
+      allowNull: false,
+      defaultValue: 'buy',
     },
     sortOrder: {
       type: DataTypes.INTEGER,
@@ -23,6 +27,7 @@ const LocationList = sequelize.define(
     tableName: 'location_list',
     timestamps: true,
     underscored: true,
+    indexes: [{ unique: true, fields: ['name', 'purpose'] }],
   }
 )
 
