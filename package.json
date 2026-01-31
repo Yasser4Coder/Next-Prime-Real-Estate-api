@@ -3,10 +3,10 @@
   "version": "1.0.0",
   "description": "Next Prime Real Estate API - Express, MySQL, Sequelize, Cloudinary",
   "type": "module",
-  "main": "server.js",
+  "main": "index.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node --watch server.js",
+    "start": "node index.js",
+    "dev": "node --watch index.js",
     "db:sync": "node src/scripts/syncDb.js",
     "db:seed": "node src/scripts/seed.js"
   },

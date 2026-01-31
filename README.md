@@ -47,14 +47,17 @@ Node.js is supported on **Business** and **Cloud** plans. A 503 usually means th
    - `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`
    - Do **not** set `PORT` unless Hostinger tells you to; the app uses `process.env.PORT` automatically.
 
-3. **Build / start**
-   - Build command: leave default or `npm install`.
-   - Start command: `npm start` (or `node server.js`).
+3. **Application startup file (fix ERR_REQUIRE_ESM)**
+   - Hostinger’s Node runner uses `require()`, which cannot load ES modules. Set the **Application startup file** (or “Entry file”) to **`server.cjs`** in the Node.js app settings. That file loads the ESM app via dynamic `import()`.
 
-4. **Database**
+4. **Build / start**
+   - Build command: leave default or `npm install`.
+   - Start command: `npm start` (or `node index.js`). If you set startup file to `server.cjs`, the host will run that instead.
+
+5. **Database**
    - Create a MySQL database and user in hPanel, then run migrations once (e.g. via SSH if available: `cd backend && npm run db:sync && npm run db:seed`, or use a local DB and export/import).
 
-5. **Check logs**
+6. **Check logs**
    - In hPanel, open your Node.js app → **Deployment details** or **Logs**. If the process exits, the log will show the error (often “Database connection failed” or missing env).
 
 ## Scripts
