@@ -21,6 +21,11 @@ app.get('/', (req, res) => {
   res.json({ name: 'Next Prime Real Estate API', status: 'ok', health: '/health' })
 })
 
+// No DB dependency - use this to confirm the app is running
+app.get('/ping', (req, res) => {
+  res.json({ pong: true })
+})
+
 app.use('/api', routes)
 
 app.get('/health', (req, res) => {
