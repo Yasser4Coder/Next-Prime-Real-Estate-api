@@ -17,10 +17,15 @@ app.use(
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
+app.get('/', (req, res) => {
+  res.json({ name: 'Next Prime Real Estate API', status: 'ok', health: '/health' })
+})
+
 app.use('/api', routes)
 
 app.get('/health', (req, res) => {
-  res.json({ ok: true })
+  const dbConnected = app.get('dbConnected')
+  res.json({ ok: true, db: dbConnected === true })
 })
 
 app.use((err, req, res, next) => {
