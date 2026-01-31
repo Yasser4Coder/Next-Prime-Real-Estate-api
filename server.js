@@ -15,7 +15,9 @@ app.listen(PORT, '0.0.0.0', () => {
       app.set('dbConnected', true)
     })
     .catch((err) => {
-      console.error('Database connection failed:', err.message)
+      const msg = err.original?.message || err.parent?.message || err.message
+      console.error('Database connection failed:', msg)
       app.set('dbConnected', false)
+      app.set('dbError', msg)
     })
 })
