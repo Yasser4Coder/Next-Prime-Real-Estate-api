@@ -1,4 +1,5 @@
 const express = require('express')
+const path = require('path')
 const cors = require('cors')
 const dotenv = require('dotenv')
 const routes = require('./routes')
@@ -6,6 +7,10 @@ const routes = require('./routes')
 dotenv.config()
 
 const app = express()
+
+// Serve uploaded PDFs (floor plan, brochure) from server disk
+const uploadsPath = path.join(__dirname, '..', 'uploads')
+app.use('/uploads', express.static(uploadsPath))
 const allowedOrigins = [
   'http://localhost:5173',
   'https://nextprimerealestate.com',

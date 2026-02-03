@@ -1,6 +1,45 @@
+const path = require('path')
+const fs = require('fs')
 const { models } = require('../../models')
 const { uploadToCloudinary, deleteFromCloudinaryByUrl } = require('../../config/cloudinary')
 const { Property } = models
+
+const UPLOADS_DIR = path.join(__dirname, '../../../uploads/properties')
+
+function ensureUploadsDir() {
+  const dir = path.join(__dirname, '../../../uploads')
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true })
+  if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true })
+}
+
+function getApiBaseUrl(req) {
+  const env = process.env.API_URL
+  if (env) return env.replace(/\/$/, '')
+  return `${req.protocol || 'http'}://${req.get('host') || 'localhost:3000'}`
+}
+
+function savePdfToServer(file, prefix, req) {
+  if (!file || !file.buffer) return null
+  ensureUploadsDir()
+  const ext = path.extname(file.originalname) || '.pdf'
+  const safeName = `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}${ext}`
+  const filePath = path.join(UPLOADS_DIR, safeName)
+  fs.writeFileSync(filePath, file.buffer)
+  const baseUrl = getApiBaseUrl(req)
+  return `${baseUrl}/uploads/properties/${safeName}`
+}
+
+function deleteServerPdfIfLocal(url) {
+  if (!url || typeof url !== 'string') return
+  const match = url.match(/\/uploads\/properties\/([^/?#]+)/)
+  if (!match) return
+  const filePath = path.join(UPLOADS_DIR, match[1])
+  try {
+    if (fs.existsSync(filePath)) fs.unlinkSync(filePath)
+  } catch (e) {
+    console.error('Failed to delete PDF:', filePath, e.message)
+  }
+}
 
 function parsePrice(v) {
   if (v === '' || v == null) return 0
@@ -137,6 +176,8 @@ async function create(req, res) {
 
     const mainFile = req.files?.image?.[0]
     const galleryFiles = req.files?.photos || []
+    const floorPlanFile = req.files?.floorPlanFile?.[0]
+    const brochureFile = req.files?.brochureFile?.[0]
 
     if (mainFile) {
       const [url] = await uploadFilesToCloudinary([mainFile])
@@ -144,6 +185,15 @@ async function create(req, res) {
     }
     const uploadedGalleryUrls = await uploadFilesToCloudinary(galleryFiles)
     if (!imageUrl) imageUrl = '/logo-icon.PNG'
+
+    let floorPlanFileUrl = (body.floorPlanFile && body.floorPlanFile.trim()) || null
+    if (floorPlanFile) {
+      floorPlanFileUrl = savePdfToServer(floorPlanFile, 'floor-plan', req)
+    }
+    let brochureFileUrl = (body.brochureFile && body.brochureFile.trim()) || null
+    if (brochureFile) {
+      brochureFileUrl = savePdfToServer(brochureFile, 'brochure', req)
+    }
 
     const photos = [
       imageUrl,
@@ -164,6 +214,8 @@ async function create(req, res) {
       description: body.description || null,
       image: imageUrl,
       photos: photosUnique.length ? photosUnique : [imageUrl],
+      floorPlanFile: floorPlanFileUrl,
+      brochureFile: brochureFileUrl,
       location: body.location || null,
       price: parsePrice(body.price),
       type: body.type || 'Villa',
@@ -181,7 +233,9 @@ async function create(req, res) {
     return res.status(201).json(property)
   } catch (err) {
     console.error(err)
-    return res.status(500).json({ error: 'Failed to create property' })
+    const status = err.statusCode === 400 ? 400 : 500
+    const message = err.statusCode === 400 ? err.message : 'Failed to create property'
+    return res.status(status).json({ error: message })
   }
 }
 
@@ -197,6 +251,8 @@ async function update(req, res) {
 
     const mainFile = req.files?.image?.[0]
     const galleryFiles = req.files?.photos || []
+    const floorPlanFile = req.files?.floorPlanFile?.[0]
+    const brochureFile = req.files?.brochureFile?.[0]
 
     if (mainFile) {
       const [url] = await uploadFilesToCloudinary([mainFile])
@@ -216,6 +272,30 @@ async function update(req, res) {
     for (const url of removed) {
       await deleteFromCloudinaryByUrl(url)
     }
+
+    let floorPlanFileUrl = property.floorPlanFile
+    if (body.floorPlanFile !== undefined || floorPlanFile) {
+      if (floorPlanFile) {
+        deleteServerPdfIfLocal(property.floorPlanFile)
+        floorPlanFileUrl = savePdfToServer(floorPlanFile, 'floor-plan', req)
+      } else {
+        const newVal = (body.floorPlanFile && body.floorPlanFile.trim()) || null
+        if (!newVal && property.floorPlanFile) deleteServerPdfIfLocal(property.floorPlanFile)
+        floorPlanFileUrl = newVal
+      }
+    }
+    let brochureFileUrl = property.brochureFile
+    if (body.brochureFile !== undefined || brochureFile) {
+      if (brochureFile) {
+        deleteServerPdfIfLocal(property.brochureFile)
+        brochureFileUrl = savePdfToServer(brochureFile, 'brochure', req)
+      } else {
+        const newVal = (body.brochureFile && body.brochureFile.trim()) || null
+        if (!newVal && property.brochureFile) deleteServerPdfIfLocal(property.brochureFile)
+        brochureFileUrl = newVal
+      }
+    }
+
     const address = parseAddress(body)
     const overview = parseOverview(body)
     const residenceOptions = parseJsonField(body.residenceOptions)
@@ -229,6 +309,8 @@ async function update(req, res) {
       description: body.description !== undefined ? body.description : property.description,
       image: imageUrl,
       photos: photosUnique.length ? photosUnique : [imageUrl],
+      floorPlanFile: floorPlanFileUrl,
+      brochureFile: brochureFileUrl,
       location: body.location !== undefined ? body.location : property.location,
       price: body.price !== undefined && body.price !== '' ? parsePrice(body.price) : property.price,
       type: body.type !== undefined ? body.type : property.type,
@@ -246,7 +328,9 @@ async function update(req, res) {
     return res.json(property)
   } catch (err) {
     console.error(err)
-    return res.status(500).json({ error: 'Failed to update property' })
+    const status = err.statusCode === 400 ? 400 : 500
+    const message = err.statusCode === 400 ? err.message : 'Failed to update property'
+    return res.status(status).json({ error: message })
   }
 }
 
@@ -261,6 +345,8 @@ async function remove(req, res) {
     for (const url of urlsToDelete) {
       await deleteFromCloudinaryByUrl(url)
     }
+    deleteServerPdfIfLocal(property.floorPlanFile)
+    deleteServerPdfIfLocal(property.brochureFile)
     await property.destroy()
     return res.status(204).send()
   } catch (err) {

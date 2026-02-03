@@ -14,6 +14,7 @@ Express (ES6), MySQL (Sequelize ORM), Cloudinary for images. Admin auth via JWT.
 3. **Env**
    - Copy `.env.example` to `.env`
    - Set `DB_*`, `JWT_SECRET`, `FRONTEND_URL`, and Cloudinary keys.
+   - `API_URL` (optional) – Full backend URL (e.g. `https://api.yoursite.com`) for PDF download links. If unset, uses request host.
 
 4. **Install & DB**
    ```bash
@@ -45,6 +46,7 @@ Node.js is supported on **Business** and **Cloud** plans. A 503 usually means th
    - `JWT_SECRET` – strong random string
    - `FRONTEND_URL` – your frontend URL (e.g. `https://yoursite.com`)
    - `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`
+   - `API_URL` (optional) – Full backend URL for PDF download links (e.g. `https://api.yoursite.com`)
    - Do **not** set `PORT` unless Hostinger tells you to; the app uses `process.env.PORT` automatically.
 
 3. **Build / start**

@@ -25,6 +25,18 @@ const Property = sequelize.define(
       defaultValue: [],
       comment: 'Array of image URLs for gallery',
     },
+    video: {
+      type: DataTypes.STRING(500),
+      comment: 'Video URL (embed or direct) shown beside images',
+    },
+    floorPlanFile: {
+      type: DataTypes.STRING(500),
+      comment: 'URL to downloadable floor plan file (PDF)',
+    },
+    brochureFile: {
+      type: DataTypes.STRING(500),
+      comment: 'URL to downloadable brochure file (PDF)',
+    },
     location: {
       type: DataTypes.STRING(255),
     },
