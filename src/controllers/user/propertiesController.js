@@ -1,5 +1,6 @@
 const { models } = require('../../models')
 const { Property, FeaturedProperty } = models
+const { generateUniqueSlug } = require('../../utils/slug')
 
 async function list(req, res) {
   try {
@@ -13,10 +14,23 @@ async function list(req, res) {
 
 async function getOne(req, res) {
   try {
-    const id = parseInt(req.params.id, 10)
-    const property = await Property.findByPk(id)
+    const param = req.params.id
+    const isNumeric = /^\d+$/.test(param)
+    let property
+    if (isNumeric) {
+      property = await Property.findByPk(parseInt(param, 10))
+      if (property && !property.slug) {
+        property.slug = await generateUniqueSlug(Property, property.title, property.id)
+        await property.save()
+      }
+    } else {
+      property = await Property.findOne({ where: { slug: param } })
+    }
     if (!property) return res.status(404).json({ error: 'Property not found' })
-    return res.json(property)
+    const data = typeof property.toJSON === 'function' ? property.toJSON() : (typeof property.get === 'function' ? property.get() : { ...property })
+    data.bedrooms = property.bedrooms != null && String(property.bedrooms).trim() !== '' ? String(property.bedrooms) : (property.bedrooms != null ? String(property.bedrooms) : null)
+    data.bathrooms = property.bathrooms != null && String(property.bathrooms).trim() !== '' ? String(property.bathrooms) : (property.bathrooms != null ? String(property.bathrooms) : null)
+    return res.json(data)
   } catch (err) {
     console.error(err)
     return res.status(500).json({ error: 'Failed to get property' })

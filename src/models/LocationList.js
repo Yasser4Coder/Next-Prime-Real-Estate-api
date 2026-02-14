@@ -14,7 +14,7 @@ const LocationList = sequelize.define(
       allowNull: false,
     },
     purpose: {
-      type: DataTypes.ENUM('buy', 'rent'),
+      type: DataTypes.ENUM('buy', 'rent', 'off-plan'),
       allowNull: false,
       defaultValue: 'buy',
     },

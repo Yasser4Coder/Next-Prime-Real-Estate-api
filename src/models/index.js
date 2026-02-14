@@ -7,6 +7,7 @@ const LocationList = require('./LocationList')
 const Contact = require('./Contact')
 const SocialLink = require('./SocialLink')
 const FeaturedProperty = require('./FeaturedProperty')
+const DownloadLead = require('./DownloadLead')
 
 // Associations
 FeaturedProperty.belongsTo(Property, { foreignKey: 'propertyId' })
@@ -21,6 +22,7 @@ const models = {
   Contact,
   SocialLink,
   FeaturedProperty,
+  DownloadLead,
 }
 
 module.exports = { sequelize, models }

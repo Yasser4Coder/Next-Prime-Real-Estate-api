@@ -1,6 +1,7 @@
 const path = require('path')
 const fs = require('fs')
-const { models } = require('../../models')
+const { models, sequelize } = require('../../models')
+const { generateUniqueSlug } = require('../../utils/slug')
 const { uploadToCloudinary, deleteFromCloudinaryByUrl } = require('../../config/cloudinary')
 const { Property } = models
 
@@ -45,6 +46,35 @@ function parsePrice(v) {
   if (v === '' || v == null) return 0
   const n = Number(v)
   return isNaN(n) ? 0 : n
+}
+
+/** Year built: number if numeric year, otherwise string (e.g. "Under Construction"). */
+function parseYearBuilt(v) {
+  if (v === '' || v == null) return undefined
+  const s = String(v).trim()
+  if (!s) return undefined
+  const n = Number(s)
+  if (!Number.isNaN(n) && n >= 1000 && n <= 2100) return n
+  return s
+}
+
+/** Garages: number if a single non-negative integer, otherwise string (e.g. "1–2"). */
+function parseGarages(v) {
+  if (v === '' || v == null) return undefined
+  const s = String(v).trim()
+  if (!s) return undefined
+  const n = Number(s)
+  if (!Number.isNaN(n) && Number.isInteger(n) && n >= 0) return n
+  return s
+}
+
+/** Get string from body (multipart can send arrays for some fields). Never parse as number. */
+function getBodyStr(body, key) {
+  if (!body || typeof body !== 'object') return undefined
+  const v = body[key]
+  if (v == null) return undefined
+  if (Array.isArray(v)) return v[0] != null ? String(v[0]).trim() : undefined
+  return String(v).trim()
 }
 
 function parseAddress(body) {
@@ -101,16 +131,22 @@ function parseOverview(body) {
   if (fromJson && typeof fromJson === 'object' && !Array.isArray(fromJson)) {
     const o = {}
     if (fromJson.areaSqft != null) o.areaSqft = Number(fromJson.areaSqft)
+    if (fromJson.areaText != null && fromJson.areaText !== '') o.areaText = String(fromJson.areaText).trim()
     if (fromJson.status != null && fromJson.status !== '') o.status = String(fromJson.status).trim()
-    if (fromJson.yearBuilt != null) o.yearBuilt = Number(fromJson.yearBuilt)
-    if (fromJson.garages != null) o.garages = Number(fromJson.garages)
+    if (fromJson.yearBuilt != null && fromJson.yearBuilt !== '') o.yearBuilt = parseYearBuilt(fromJson.yearBuilt)
+    if (fromJson.garages != null && fromJson.garages !== '') o.garages = parseGarages(fromJson.garages)
+    if (fromJson.buildingConfiguration != null && fromJson.buildingConfiguration !== '') o.buildingConfiguration = String(fromJson.buildingConfiguration).trim()
+    if (fromJson.projectType != null && fromJson.projectType !== '') o.projectType = String(fromJson.projectType).trim()
     return o
   }
   const o = {}
   if (body.overviewAreaSqft != null && body.overviewAreaSqft !== '') o.areaSqft = Number(body.overviewAreaSqft)
+  if (body.overviewAreaText != null && String(body.overviewAreaText).trim() !== '') o.areaText = String(body.overviewAreaText).trim()
   if (body.overviewStatus?.trim()) o.status = body.overviewStatus.trim()
-  if (body.overviewYearBuilt != null && body.overviewYearBuilt !== '') o.yearBuilt = Number(body.overviewYearBuilt)
-  if (body.overviewGarages != null && body.overviewGarages !== '') o.garages = Number(body.overviewGarages)
+  if (body.overviewYearBuilt != null && body.overviewYearBuilt !== '') o.yearBuilt = parseYearBuilt(body.overviewYearBuilt)
+  if (body.overviewGarages != null && body.overviewGarages !== '') o.garages = parseGarages(body.overviewGarages)
+  if (body.overviewBuildingConfiguration != null && String(body.overviewBuildingConfiguration).trim() !== '') o.buildingConfiguration = String(body.overviewBuildingConfiguration).trim()
+  if (body.overviewProjectType != null && String(body.overviewProjectType).trim() !== '') o.projectType = String(body.overviewProjectType).trim()
   return o
 }
 
@@ -168,16 +204,28 @@ async function uploadFilesToCloudinary(files, folder = 'nextprime/properties') {
   return results
 }
 
+/** When using multer.any(), req.files is an array; normalize to { image, photos, floorPlanFile, brochureFile } */
+function getFilesFromReq(files) {
+  if (!Array.isArray(files)) return { image: [], photos: [], floorPlanFile: [], brochureFile: [] }
+  return {
+    image: files.filter((f) => f.fieldname === 'image'),
+    photos: files.filter((f) => f.fieldname === 'photos'),
+    floorPlanFile: files.filter((f) => f.fieldname === 'floorPlanFile'),
+    brochureFile: files.filter((f) => f.fieldname === 'brochureFile'),
+  }
+}
+
 async function create(req, res) {
   try {
     const body = req.body
     let imageUrl = (body.image && body.image.trim()) || ''
     const photoUrlsFromBody = parsePhotos(body.photos)
 
-    const mainFile = req.files?.image?.[0]
-    const galleryFiles = req.files?.photos || []
-    const floorPlanFile = req.files?.floorPlanFile?.[0]
-    const brochureFile = req.files?.brochureFile?.[0]
+    const files = getFilesFromReq(req.files)
+    const mainFile = files.image[0]
+    const galleryFiles = files.photos
+    const floorPlanFile = files.floorPlanFile[0]
+    const brochureFile = files.brochureFile[0]
 
     if (mainFile) {
       const [url] = await uploadFilesToCloudinary([mainFile])
@@ -208,9 +256,15 @@ async function create(req, res) {
     const features = parseJsonField(body.features)
     const floorPlans = parseJsonField(body.floorPlans)
     const agent = parseAgent(body)
+    const slug = await generateUniqueSlug(Property, body.title || 'property')
+
+    const bedroomsVal = (() => { const s = getBodyStr(body, 'bedrooms'); return s != null && s !== '' ? s : null })()
+    const bathroomsVal = (() => { const s = getBodyStr(body, 'bathrooms'); return s != null && s !== '' ? s : null })()
+    const priceDisplayVal = (() => { const s = getBodyStr(body, 'priceDisplay') ?? getBodyStr(body, 'price_display'); return s != null && s !== '' ? s : null })()
 
     const property = await Property.create({
       title: body.title,
+      slug,
       description: body.description || null,
       image: imageUrl,
       photos: photosUnique.length ? photosUnique : [imageUrl],
@@ -218,10 +272,11 @@ async function create(req, res) {
       brochureFile: brochureFileUrl,
       location: body.location || null,
       price: parsePrice(body.price),
+      priceDisplay: priceDisplayVal,
       type: body.type || 'Villa',
       purpose: body.purpose || 'buy',
-      bedrooms: parseInt(body.bedrooms, 10) || 0,
-      bathrooms: parseFloat(body.bathrooms) || 0,
+      bedrooms: bedroomsVal,
+      bathrooms: bathroomsVal,
       address,
       overview: Object.keys(overview).length ? overview : null,
       residenceOptions: Array.isArray(residenceOptions) ? residenceOptions : null,
@@ -249,10 +304,11 @@ async function update(req, res) {
     const photoUrlsFromBody = parsePhotos(body.photos)
     let imageUrl = (body.image && body.image.trim()) || (photoUrlsFromBody[0] || property.image)
 
-    const mainFile = req.files?.image?.[0]
-    const galleryFiles = req.files?.photos || []
-    const floorPlanFile = req.files?.floorPlanFile?.[0]
-    const brochureFile = req.files?.brochureFile?.[0]
+    const files = getFilesFromReq(req.files)
+    const mainFile = files.image[0]
+    const galleryFiles = files.photos
+    const floorPlanFile = files.floorPlanFile[0]
+    const brochureFile = files.brochureFile[0]
 
     if (mainFile) {
       const [url] = await uploadFilesToCloudinary([mainFile])
@@ -297,14 +353,39 @@ async function update(req, res) {
     }
 
     const address = parseAddress(body)
-    const overview = parseOverview(body)
     const residenceOptions = parseJsonField(body.residenceOptions)
     const highlights = parseHighlights(body)
     const features = parseJsonField(body.features)
     const floorPlans = parseJsonField(body.floorPlans)
     const agent = parseAgent(body)
+    const titleChanged = body.title !== undefined && body.title !== property.title
+    const titleForSlug = titleChanged ? body.title : property.title
+    const newSlug = (titleChanged || !property.slug)
+      ? await generateUniqueSlug(Property, titleForSlug, property.id)
+      : property.slug
+
+    const bedroomsRaw = getBodyStr(body, 'bedrooms') ?? (req.query.bedrooms != null ? String(req.query.bedrooms).trim() : undefined)
+    const bathroomsRaw = getBodyStr(body, 'bathrooms') ?? (req.query.bathrooms != null ? String(req.query.bathrooms).trim() : undefined)
+    const bedroomsVal = bedroomsRaw !== undefined ? (bedroomsRaw !== '' ? bedroomsRaw : null) : property.bedrooms
+    const bathroomsVal = bathroomsRaw !== undefined ? (bathroomsRaw !== '' ? bathroomsRaw : null) : property.bathrooms
+    const priceDisplayRaw = getBodyStr(body, 'priceDisplay') ?? getBodyStr(body, 'price_display')
+    const priceDisplayVal = priceDisplayRaw !== undefined ? (priceDisplayRaw !== '' ? priceDisplayRaw : null) : property.priceDisplay
+
+    const overviewFromBody = parseOverview(body)
+    const hasOverviewFields =
+      body.overviewAreaSqft !== undefined ||
+      body.overviewAreaText !== undefined ||
+      body.overviewStatus !== undefined ||
+      body.overviewYearBuilt !== undefined ||
+      body.overviewGarages !== undefined ||
+      body.overviewBuildingConfiguration !== undefined ||
+      body.overviewProjectType !== undefined ||
+      (body.overview != null && typeof body.overview === 'object' && !Array.isArray(body.overview))
+    const existingOverview = property.overview && typeof property.overview === 'object' ? property.overview : {}
+    const mergedOverview = hasOverviewFields ? { ...existingOverview, ...overviewFromBody } : property.overview
 
     await property.update({
+      slug: newSlug,
       title: body.title !== undefined ? body.title : property.title,
       description: body.description !== undefined ? body.description : property.description,
       image: imageUrl,
@@ -313,18 +394,24 @@ async function update(req, res) {
       brochureFile: brochureFileUrl,
       location: body.location !== undefined ? body.location : property.location,
       price: body.price !== undefined && body.price !== '' ? parsePrice(body.price) : property.price,
+      priceDisplay: priceDisplayVal,
       type: body.type !== undefined ? body.type : property.type,
       purpose: body.purpose !== undefined ? body.purpose : property.purpose,
-      bedrooms: body.bedrooms !== undefined && body.bedrooms !== '' ? parseInt(body.bedrooms, 10) : property.bedrooms,
-      bathrooms: body.bathrooms !== undefined && body.bathrooms !== '' ? parseFloat(body.bathrooms) : property.bathrooms,
+      bedrooms: bedroomsVal != null ? String(bedroomsVal) : null,
+      bathrooms: bathroomsVal != null ? String(bathroomsVal) : null,
       address,
-      overview: body.overview !== undefined || body.overviewAreaSqft !== undefined ? (Object.keys(overview).length ? overview : null) : property.overview,
+      overview: hasOverviewFields ? (Object.keys(mergedOverview).length ? mergedOverview : null) : property.overview,
       residenceOptions: body.residenceOptions !== undefined ? (Array.isArray(residenceOptions) ? residenceOptions : null) : property.residenceOptions,
       highlights: body.highlights !== undefined ? (highlights.length ? highlights : null) : property.highlights,
       features: body.features !== undefined ? (features && typeof features === 'object' && !Array.isArray(features) ? features : null) : property.features,
       floorPlans: body.floorPlans !== undefined ? (Array.isArray(floorPlans) ? floorPlans : null) : property.floorPlans,
       agent: body.agent !== undefined || body.agentPhone !== undefined ? agent : property.agent,
     })
+    await sequelize.query(
+      'UPDATE properties SET bedrooms = :bedrooms, bathrooms = :bathrooms WHERE id = :id',
+      { replacements: { bedrooms: bedroomsVal, bathrooms: bathroomsVal, id: property.id } }
+    )
+    await property.reload()
     return res.json(property)
   } catch (err) {
     console.error(err)

@@ -21,6 +21,7 @@ async function getSiteData(req, res) {
     }))
     const locationsBuy = locationsRows.filter((l) => (l.purpose || 'buy') === 'buy').map((l) => l.name)
     const locationsRent = locationsRows.filter((l) => l.purpose === 'rent').map((l) => l.name)
+    const locationsOffPlan = locationsRows.filter((l) => l.purpose === 'off-plan').map((l) => l.name)
     const contact = contactRow
       ? {
           phoneDisplay: contactRow.phoneDisplay,
@@ -37,12 +38,20 @@ async function getSiteData(req, res) {
     const socialLinks = socialRows.map((s) => ({ name: s.name, href: s.href, icon: s.icon }))
     const featuredPropertyIds = featuredRows.map((f) => f.propertyId)
 
+    const propertiesSerialized = properties.map((p) => {
+      const row = p.toJSON ? p.toJSON() : (typeof p.get === 'function' ? p.get() : { ...p })
+      row.bedrooms = p.bedrooms != null ? String(p.bedrooms) : null
+      row.bathrooms = p.bathrooms != null ? String(p.bathrooms) : null
+      return row
+    })
+
     return res.json({
-      properties,
+      properties: propertiesSerialized,
       testimonials,
       areas,
       locationsBuy,
       locationsRent,
+      locationsOffPlan,
       contact,
       socialLinks,
       featuredPropertyIds,

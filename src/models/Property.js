@@ -13,6 +13,11 @@ const Property = sequelize.define(
       type: DataTypes.STRING(255),
       allowNull: false,
     },
+    slug: {
+      type: DataTypes.STRING(255),
+      unique: true,
+      comment: 'URL-friendly identifier, e.g. dubai-marina-luxury-villa',
+    },
     description: {
       type: DataTypes.TEXT,
     },
@@ -44,21 +49,25 @@ const Property = sequelize.define(
       type: DataTypes.DECIMAL(14, 2),
       defaultValue: 0,
     },
+    priceDisplay: {
+      type: DataTypes.STRING(100),
+      comment: 'e.g. "On Request" – shown instead of formatted price when set',
+    },
     type: {
       type: DataTypes.STRING(50),
       defaultValue: 'Villa',
     },
     purpose: {
-      type: DataTypes.ENUM('buy', 'rent'),
+      type: DataTypes.ENUM('buy', 'rent', 'off-plan'),
       defaultValue: 'buy',
     },
     bedrooms: {
-      type: DataTypes.INTEGER,
-      defaultValue: 0,
+      type: DataTypes.STRING(100),
+      comment: 'e.g. "3" or "Studio – 1 – 2 – 3"',
     },
     bathrooms: {
-      type: DataTypes.DECIMAL(4, 1),
-      defaultValue: 0,
+      type: DataTypes.STRING(100),
+      comment: 'e.g. "2" or "1 – 3 (حسب الوحدة)"',
     },
     address: {
       type: DataTypes.JSON,
@@ -68,7 +77,7 @@ const Property = sequelize.define(
     overview: {
       type: DataTypes.JSON,
       defaultValue: null,
-      comment: '{ areaSqft, status, yearBuilt, garages }',
+      comment: '{ areaSqft, areaText, status, yearBuilt, garages, buildingConfiguration, projectType }',
     },
     residenceOptions: {
       type: DataTypes.JSON,

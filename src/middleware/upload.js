@@ -15,6 +15,7 @@ const imageUpload = multer({
 })
 
 // Property form: images (Cloudinary) + PDFs (server disk). No video.
+// Use .any() so req.body gets ALL form fields (bedrooms, bathrooms, etc.); req.files is an array.
 const upload = multer({
   storage,
   limits: { fileSize: 50 * 1024 * 1024 }, // 50MB max (images + PDFs)
@@ -28,11 +29,7 @@ const upload = multer({
 
 const uploadSingle = (fieldName) => imageUpload.single(fieldName)
 const uploadMultiple = (fieldName, maxCount = 10) => imageUpload.array(fieldName, maxCount)
-const uploadPropertyImages = upload.fields([
-  { name: 'image', maxCount: 1 },
-  { name: 'photos', maxCount: 10 },
-  { name: 'floorPlanFile', maxCount: 1 },
-  { name: 'brochureFile', maxCount: 1 },
-])
+
+const uploadPropertyImages = upload.any()
 
 module.exports = { uploadSingle, uploadMultiple, uploadPropertyImages }

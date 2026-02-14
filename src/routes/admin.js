@@ -9,6 +9,7 @@ const locationsListController = require('../controllers/admin/locationsListContr
 const contactController = require('../controllers/admin/contactController')
 const socialController = require('../controllers/admin/socialController')
 const featuredController = require('../controllers/admin/featuredController')
+const downloadLeadsController = require('../controllers/admin/downloadLeadsController')
 const uploadController = require('../controllers/uploadController')
 
 const router = express.Router()
@@ -47,5 +48,9 @@ router.delete('/social/:name', socialController.remove)
 
 router.get('/featured', featuredController.list)
 router.put('/featured', featuredController.set)
+
+router.get('/download-leads', downloadLeadsController.list)
+router.put('/download-leads/:id', downloadLeadsController.update)
+router.delete('/download-leads/:id', downloadLeadsController.remove)
 
 module.exports = router
