@@ -14,6 +14,7 @@ app.use('/uploads', express.static(uploadsPath))
 const allowedOrigins = [
   'http://localhost:5173',
   'https://nextprimerealestate.com',
+  'https://www.nextprimerealestate.com',
 ]
 
 app.use(
