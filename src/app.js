@@ -17,10 +17,20 @@ const allowedOrigins = [
   'https://www.nextprimerealestate.com',
 ]
 
+// Allow exact list + any origin that is our domain (with or without www)
+const allowedOriginPattern = /^https:\/\/(www\.)?nextprimerealestate\.com$/
+
+function isOriginAllowed(origin) {
+  if (!origin) return true
+  if (allowedOrigins.includes(origin)) return true
+  if (allowedOriginPattern.test(origin)) return true
+  return false
+}
+
 app.use(
   cors({
     origin: (origin, cb) => {
-      if (!origin || allowedOrigins.includes(origin)) cb(null, true)
+      if (isOriginAllowed(origin)) cb(null, true)
       else cb(null, false)
     },
     credentials: true,
